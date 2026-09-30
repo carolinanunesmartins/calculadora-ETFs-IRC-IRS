@@ -60,7 +60,8 @@ export type PersonaRow = {
 // Valor bruto que, depois de 28% de dividendos, equivale ao montante pessoal.
 export const grossUpForDividends = (net: number): number => Math.round(net / (1 - DIVIDEND_TAX));
 
-export const INPUT_LIMITS = { retornoMax: 0.3, anosMin: 1, anosMax: 40, levantamentoMax: 30 } as const;
+// Anos: só um limite técnico (100) para um valor absurdo não bloquear o cálculo.
+export const INPUT_LIMITS = { retornoMax: 0.3, anosMin: 1, anosMax: 100, levantamentoMax: 100 } as const;
 
 const clamp = (value: number, min: number, max = Infinity): number =>
   Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : min;

@@ -101,6 +101,17 @@ describe('computeResults', () => {
     expect(rf.pathPessoal[7].withdrawn).toBeCloseTo(rf.brutoPessoal - 40000);
   });
 
+  it('os reforços param quando começa o levantamento, qualquer que seja o plano', () => {
+    const comReforco = { ...base, aporteAnual: 5000, anos: 10 };
+    for (const plano of [{ anosLevantamento: 1, levantamentoAnual: 0 }, { anosLevantamento: 45, levantamentoAnual: 0 }, { anosLevantamento: 60, levantamentoAnual: 12000 }]) {
+      const rf = computeResults({ ...comReforco, ...plano });
+      // capital investido = inicial + 10 reforços; o capital no gráfico nunca sobe depois do ano 10
+      expect(rf.brutoPessoal - rf.ganhoPessoal).toBeCloseTo(100000 + 10 * 5000, 4);
+      const capital = rf.pathPessoal.slice(10).map((p) => p.invested);
+      capital.slice(1).forEach((c, i) => expect(c).toBeLessThanOrEqual(capital[i] + 1e-9));
+    }
+  });
+
   it('levantamento faseado não muda a linha "fica na empresa"', () => {
     const rf = computeResults({ ...base, anosLevantamento: 3 });
     expect(rf.valorAposIrc).toBeCloseTo(r.valorAposIrc);
@@ -145,10 +156,11 @@ describe('sanitizeInputs', () => {
       aporteAnualEmpresaCustom: 0,
       levantamentoAnual: 0,
     });
-    expect(sanitizeInputs({ ...base, anos: 100, retorno: -0.2, anosLevantamento: 50 })).toMatchObject({
-      anos: 40,
+    expect(sanitizeInputs({ ...base, anos: 60, anosLevantamento: 45 })).toMatchObject({ anos: 60, anosLevantamento: 45 });
+    expect(sanitizeInputs({ ...base, anos: 150, retorno: -0.2, anosLevantamento: 150 })).toMatchObject({
+      anos: 100,
       retorno: 0,
-      anosLevantamento: 30,
+      anosLevantamento: 100,
     });
   });
 

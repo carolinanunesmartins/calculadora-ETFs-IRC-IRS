@@ -10,7 +10,7 @@ import '@fontsource/ibm-plex-mono/600.css';
 import './styles.css';
 import { BASE_YEAR, calendarYear, escapeHtml, formatEUR, formatPct } from './format';
 import { IRC_REGIMES, MICRO_ENTITY_BALANCE_LIMIT, type RegimeIrc } from './tax/irc';
-import { bestRow, computeResults, personaRows, sanitizeInputs, type Inputs, type PersonaRow, type RowKey } from './tax/results';
+import { bestRow, computeResults, INPUT_LIMITS, personaRows, sanitizeInputs, type Inputs, type PersonaRow, type RowKey } from './tax/results';
 import { drawChart, initChart } from './ui/chart';
 import { applyInputs, byId, readInputs, syncCapitalEmpresa } from './ui/dom';
 import { loadScenarios, saveScenarios } from './ui/scenarios';
@@ -67,7 +67,7 @@ function renderCompareTable(rows: PersonaRow[], distribui: boolean) {
         <td>${formatEUR(r.bruto)}</td>
         <td>${formatEUR(r.ganho)}</td>
         <td class="tax">− ${formatEUR(r.imposto)}</td>
-        <td>${r.bruto > 0 ? formatPct(r.imposto / Math.max(r.ganho, 1)) : '—'}</td>
+        <td>${r.ganho > 0 ? formatPct(r.imposto / r.ganho) : '—'}</td>
         <td style="font-weight:600">${formatEUR(r.liquido)}</td>
       </tr>`;
     })
@@ -153,7 +153,7 @@ function answersToInputs(a: WizardAnswers): Partial<Inputs> {
     capitalPessoal: a.capitalPessoal as number,
     aporteAnual: (a.aporteAnual as number | undefined) || 0,
     retorno: Number(((a.retorno as number) / 100).toFixed(4)),
-    anos: (a.anos as number) - BASE_YEAR,
+    anos: a.anos as number,
     anosLevantamento: (a.anosLevantamento as number | undefined) || 1,
     levantamentoAnual: (a.levantamentoAnual as number | undefined) || 0,
     rendimentoBase: a.rendimentoBase as number,
@@ -169,7 +169,7 @@ function inputsToAnswers(inp: Inputs): WizardAnswers {
     capitalPessoal: inp.capitalPessoal,
     aporteAnual: inp.aporteAnual,
     retorno: Number((inp.retorno * 100).toFixed(2)),
-    anos: calendarYear(inp.anos),
+    anos: inp.anos,
     anosLevantamento: inp.anosLevantamento,
     levantamentoAnual: inp.levantamentoAnual || undefined,
     rendimentoBase: inp.rendimentoBase,
@@ -254,7 +254,7 @@ document
   .forEach((el) => el.addEventListener('change', update));
 
 byId<HTMLInputElement>('anoInicio').min = String(BASE_YEAR + 1);
-byId<HTMLInputElement>('anoInicio').max = String(BASE_YEAR + 40);
+byId<HTMLInputElement>('anoInicio').max = String(BASE_YEAR + INPUT_LIMITS.anosMax);
 
 initChart();
 wizard.start();
