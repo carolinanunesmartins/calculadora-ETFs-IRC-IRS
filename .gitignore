@@ -28,3 +28,6 @@ dist-ssr
 !.env.example
 
 .bak/
+
+# Notas locais do Claude Code
+.claude/
