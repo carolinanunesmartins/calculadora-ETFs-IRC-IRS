@@ -31,3 +31,4 @@ dist-ssr
 
 # Notas locais do Claude Code
 .claude/
+.vercel
