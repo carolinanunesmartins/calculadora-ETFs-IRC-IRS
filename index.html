@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Investimento de ETFs</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+</head>
+<body>
+<div class="page">
+  <div class="masthead">
+    <div class="eyebrow">Simulador · IRS &amp; IRC 2026</div>
+    <h1>Compensa investir através de <em>uma empresa</em>?</h1>
+    <ul class="paths">
+      <li><b>Investimento pessoal</b>Compras ETFs em teu nome e vendes no fim.</li>
+      <li><b>Transparência fiscal</b>A empresa investe, mas o ganho é tributado no teu IRS.</li>
+      <li><b>Empresa normal</b>A empresa investe e paga IRC; podes tirar o dinheiro ou deixá-lo lá.</li>
+    </ul>
+  </div>
+
+  <!-- WIZARD -->
+  <div id="wizard" class="wizard-wrap">
+    <div class="wizard-card">
+      <div class="wizard-progress"><div class="wizard-progress-bar" id="wizardProgressBar"></div></div>
+      <div class="wizard-meta" id="wizardMeta"></div>
+      <h2 class="wizard-question" id="wizardQuestion"></h2>
+      <p class="wizard-helper" id="wizardHelper"></p>
+      <div id="wizardInputArea"></div>
+      <div class="wizard-nav">
+        <button class="ghost" id="wizardBack" type="button">← Anterior</button>
+        <button class="primary" id="wizardNext" type="button">Seguinte →</button>
+      </div>
+    </div>
+    <div class="wizard-scenarios" id="wizardScenarios" hidden>
+      <div class="wizard-scenarios-label">ou carrega um cenário guardado</div>
+      <div class="chip-row" id="wizardChipRow"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" hidden>
+    <div class="dashboard-toolbar">
+      <button class="ghost" id="restartWizardBtn" type="button">↺ Refazer o assistente</button>
+      <button class="primary" id="exportPdfBtn" type="button">Exportar PDF</button>
+    </div>
+
+    <div class="layout">
+      <!-- INPUT SHEET -->
+      <div>
+        <div class="sheet">
+          <h2>O teu investimento</h2>
+          <div class="field">
+            <label for="capitalPessoal">Valor a investir (€)</label>
+            <input type="number" id="capitalPessoal" min="0" step="5000">
+          </div>
+          <div class="field">
+            <label for="aporteAnual">Reforço anual (€)</label>
+            <input type="number" id="aporteAnual" min="0" step="1000">
+          </div>
+          <div class="field">
+            <label for="retorno">Rentabilidade anual esperada (%)</label>
+            <input type="number" id="retorno" min="0" max="30" step="0.01">
+          </div>
+          <div class="field">
+            <label for="anoInicio">Começar a tirar em (ano)</label>
+            <input type="number" id="anoInicio" step="1">
+            <small id="antiguidadeInfo"></small>
+          </div>
+          <div class="field">
+            <label for="levantamentoAnual">Tirar por ano — bruto (€)</label>
+            <input type="number" id="levantamentoAnual" min="0" step="1000" placeholder="Partes iguais">
+            <small>Valor vendido por ano, antes de impostos. Em branco = partes iguais.</small>
+          </div>
+          <div class="field">
+            <label for="anosLevantamento">Durante no máximo (anos)</label>
+            <input type="number" id="anosLevantamento" min="1" max="30" step="1" value="1">
+            <small>1 = tudo de uma vez. No último ano vende-se o que sobrar; os reforços param no ano de início.</small>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <h2><span class="who">Transparência fiscal</span></h2>
+          <div class="field">
+            <label for="rendimentoBase">Rendimento bruto anual — salário + extras (€)</label>
+            <input type="number" id="rendimentoBase" min="0" step="1000">
+            <small>Descontamos a dedução específica (o maior entre 4.587€ e 11% para a Segurança Social); o ganho junta-se ao resto e paga IRS pelo teu escalão.</small>
+          </div>
+        </div>
+
+        <div class="sheet">
+          <h2><span class="who">Empresa normal</span></h2>
+          <div class="field">
+            <label for="regimeIrc">Sede da empresa</label>
+            <select id="regimeIrc">
+              <option value="continente">Continente — geral 19% · PME 15%</option>
+              <option value="interior">Interior — geral 19% · PME 12,5%</option>
+              <option value="acores">Açores — geral 14% · PME 8,75%</option>
+              <option value="madeira">Madeira — geral 13,3% · PME 10,5%</option>
+            </select>
+            <small>Taxa PME só nos primeiros 50.000€ de lucro por ano.</small>
+          </div>
+          <div class="checkbox-row inline">
+            <input type="checkbox" id="reduzidaPME">
+            <label for="reduzidaPME">É PME ou small-mid cap</label>
+          </div>
+          <fieldset class="field">
+            <legend>Quando paga IRC sobre os ETFs</legend>
+            <div class="radio-row">
+              <label><input type="radio" name="ircTiming" value="venda"> Só quando vende</label>
+              <label><input type="radio" name="ircTiming" value="anual"> Todos os anos</label>
+            </div>
+          </fieldset>
+          <fieldset class="field">
+            <legend>No fim do prazo</legend>
+            <div class="radio-row">
+              <label><input type="radio" name="distribuicao" value="distribui"> Tira tudo para ti (dividendos, 28%)</label>
+              <label><input type="radio" name="distribuicao" value="mantem"> Deixa o dinheiro na empresa</label>
+            </div>
+          </fieldset>
+          <div class="checkbox-row inline">
+            <input type="checkbox" id="customCapitalEmpresa">
+            <label for="customCapitalEmpresa">Usar outro valor para a empresa</label>
+          </div>
+          <div class="field">
+            <label for="capitalEmpresa">Valor que a empresa investe (€)</label>
+            <input type="number" id="capitalEmpresa" disabled>
+            <small>Por omissão é maior do que o valor pessoal: é o mesmo dinheiro antes de pagar 28% para o tirar da empresa.</small>
+          </div>
+          <div class="field">
+            <label for="aporteAnualEmpresa">Reforço anual da empresa (€)</label>
+            <input type="number" id="aporteAnualEmpresa" disabled>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATEMENT -->
+      <div>
+        <section class="print-summary" id="printSummary"></section>
+        <div id="warningBox"></div>
+        <div id="verdict"></div>
+        <div class="thesis" id="thesis"></div>
+
+        <div class="ledger">
+          <div class="ledger-title">
+            <h3>Comparação</h3>
+            <span id="antiguidadeTag"></span>
+          </div>
+          <table class="compare">
+            <thead>
+              <tr><th style="text-align:left">Situação</th><th>Valor final</th><th>Ganho</th><th>Impostos</th><th>Impostos / ganho</th><th>Fica para ti</th></tr>
+            </thead>
+            <tbody id="compareBody"></tbody>
+          </table>
+        </div>
+
+        <div class="ledger chart-block">
+          <h3 style="font-family:var(--font-display); font-size:17px; font-weight:600; margin-bottom:12px;">Como o investimento cresce</h3>
+          <div class="legend">
+            <span><i style="background:var(--accent-personal)"></i> Valor — pessoal</span>
+            <span><i class="dashed" style="background-image: repeating-linear-gradient(to right, var(--accent-personal) 0 4px, transparent 4px 7px);"></i> Capital — pessoal</span>
+            <span><i style="background:var(--accent-company)"></i> Valor — empresa</span>
+            <span><i class="dashed" style="background-image: repeating-linear-gradient(to right, var(--accent-company) 0 4px, transparent 4px 7px);"></i> Capital — empresa</span>
+          </div>
+          <div class="chart-wrap">
+            <svg id="chart" width="100%" height="260" viewBox="0 0 900 260" role="img" tabindex="0" aria-label="Evolução do valor, do capital e dos juros compostos ao longo dos anos. Usa as setas para percorrer os anos."></svg>
+            <div class="chart-tooltip" id="chartTooltip" role="status" aria-live="polite" hidden></div>
+          </div>
+          <p class="chart-caption">A distância entre a linha cheia (valor) e a tracejada (capital) são os juros compostos. Com levantamento faseado, as linhas descem a partir da linha vertical à medida que tiras o dinheiro.</p>
+        </div>
+
+        <div class="ledger">
+          <div class="scenarios-header">
+            <h3>Cenários guardados</h3>
+            <div class="save-row">
+              <input type="text" id="scenarioName" placeholder="Nome do cenário">
+              <button class="primary" id="saveScenarioBtn" type="button">Guardar cenário atual</button>
+            </div>
+          </div>
+          <div id="scenariosEmpty" class="scenarios-empty">Ainda não tens cenários. Muda os valores à esquerda e guarda para comparar.</div>
+          <table class="compare scenarios" id="scenariosTable" style="display:none">
+            <thead>
+              <tr><th style="text-align:left">Cenário</th><th>Pessoal</th><th>Transparência</th><th>Empresa (distribui)</th><th>Empresa (mantém)</th><th></th></tr>
+            </thead>
+            <tbody id="scenariosBody"></tbody>
+          </table>
+        </div>
+
+        <details class="assumptions">
+          <summary>Pressupostos<span>regras fiscais usadas no cálculo</span></summary>
+          <div class="assumptions-body">
+            <h4>Investimento pessoal</h4>
+            <ul>
+              <li>Mais-valias pagam 28%.</li>
+              <li>Quanto mais tempo manténs, menos ganho é tributado: −10% a partir de 2 anos, −20% a partir de 5, −30% a partir de 8.</li>
+            </ul>
+            <p class="src">Art. 72.º e art. 43.º n.º 5 do CIRS</p>
+
+            <h4>Transparência fiscal</h4>
+            <ul>
+              <li>A empresa não paga IRC; o ganho entra no IRS do sócio e soma-se ao resto do rendimento.</li>
+              <li>IRS calculado com os escalões de 2026, uma pessoa, sem dependentes.</li>
+              <li>Ao rendimento bruto desconta-se a dedução específica da categoria A: o maior entre 8,54 × IAS (4.587,09€; IAS 2026 = 537,13€) e 11% para a Segurança Social.</li>
+              <li>Inclui a taxa adicional de solidariedade: 2,5% entre 80.000€ e 250.000€, 5% acima.</li>
+            </ul>
+            <p class="src">Art. 6.º do CIRC · art. 25.º, 68.º e 68.º-A do CIRS · Portaria n.º 480-A/2025/1 (IAS)</p>
+
+            <h4>Empresa normal — IRC</h4>
+            <table>
+              <thead><tr><th>Sede</th><th>Geral</th><th>PME*</th></tr></thead>
+              <tbody>
+                <tr><td>Continente</td><td class="n">19%</td><td class="n">15%</td></tr>
+                <tr><td>Interior</td><td class="n">19%</td><td class="n">12,5%</td></tr>
+                <tr><td>Açores</td><td class="n">14%</td><td class="n">8,75%</td></tr>
+                <tr><td>Madeira</td><td class="n">13,3%</td><td class="n">10,5%</td></tr>
+              </tbody>
+            </table>
+            <ul style="margin-top:8px">
+              <li>*A taxa PME aplica-se só aos primeiros 50.000€ de lucro de cada ano; o resto paga a taxa geral.</li>
+              <li>A empresa só pode adiar o IRC até à venda enquanto for microentidade. Deixa de o ser a partir do 3.º ano se ultrapassar 2 de 3 limites (450.000€ de balanço, 900.000€ de volume de negócios, 10 trabalhadores) em 2 anos seguidos.</li>
+              <li>Dinheiro tirado da empresa como dividendos paga mais 28%.</li>
+            </ul>
+            <p class="src">Lei n.º 73-A/2025 · Portaria n.º 208/2017 (Interior) · DLR n.º 27/2025/A (Açores) · DL n.º 158/2009, art. 9.º e 9.º-A (microentidades)</p>
+
+            <h4>Levantamento faseado</h4>
+            <ul>
+              <li>Os reforços param no ano em que começas a tirar. A partir daí, em cada ano vende-se o valor bruto escolhido (o mesmo nas três opções) ou, em branco, uma parte igual do que resta (1/N, depois 1/(N−1)…); o que fica continua a render.</li>
+              <li>No último ano do prazo máximo vende-se o que sobrar; se o dinheiro acabar antes, o levantamento termina aí. Cada venda sai de todas as compras na mesma proporção.</li>
+              <li>Os impostos são calculados ano a ano: escalões de IRS, limite PME de 50.000€ e 28% sobre o que sai em cada ano. O rendimento base repete-se todos os anos.</li>
+              <li>Os totais são somas nominais — não descontam o valor do dinheiro no tempo. A linha "Fica na empresa" mostra o fim do prazo, antes de levantar.</li>
+            </ul>
+
+            <p class="disclaimer">Ferramenta educativa — não substitui um contabilista. Os cenários guardados ficam só neste navegador.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
